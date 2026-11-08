@@ -10,7 +10,7 @@ out.append("Лабораторная работа №7, вариант 4 - фа�
 out.append("=" * 70)
 out.append("")
 out.append("Дата выполнения: " + datetime.date.today().strftime("%d.%m.%Y"))
-out.append("Python: 3.11.1, sqlite3 (stdlib), SQLAlchemy 2.1")
+out.append("Python: 3.11.1, sqlite3, SQLAlchemy 2.1, aiosqlite 0.22")
 out.append("ОС: Windows 10")
 out.append("")
 out.append("Все программы работают на in-memory базах SQLite, поэтому")
@@ -38,17 +38,23 @@ def run(title, cmd):
 
 run("Задание 4 (средняя). Обновление записи (sqlite3 UPDATE)",
     ["py", "-3", "task04_update_record.py"])
-run("Задание 8 (средняя). INNER JOIN и LEFT JOIN + GROUP BY",
-    ["py", "-3", "task08_join.py"])
+run("Задание 6 (средняя). Параметры запроса и SQL-инъекция",
+    ["py", "-3", "task06_parameterized_queries.py"])
 run("Задание 10 (средняя). SQLAlchemy ORM для одной таблицы",
     ["py", "-3", "task10_sqlalchemy_table.py"])
-run("Задание 4 (повышенная). Индексация и поиск (EXPLAIN QUERY PLAN)",
+run("Задание 5 (повышенная). Транзакции: commit и rollback",
+    ["py", "-3", "advanced05_transactions.py"])
+run("Задание 9 (повышенная). Асинхронный CRUD через aiosqlite",
+    ["py", "-3", "advanced09_async_db.py"])
+run("Дополнительно. INNER JOIN и LEFT JOIN + GROUP BY",
+    ["py", "-3", "task08_join.py"])
+run("Дополнительно. Индексация и поиск (EXPLAIN QUERY PLAN)",
     ["py", "-3", "advanced04_index_search.py"])
-run("Задание 10 (повышенная). Unit-тесты базы данных",
+run("Дополнительно. Unit-тесты базы данных",
     ["py", "-3", "-m", "unittest", "advanced10_db_tests", "-v"])
 run("Все модульные тесты репозитория",
     ["py", "-3", "-m", "unittest", "test_tasks", "advanced10_db_tests",
-     "-v"])
+     "test_advanced_new", "-v"])
 run("Проверка стиля кода (flake8)",
     ["py", "-3", "-m", "flake8", ".", "--statistics"])
 

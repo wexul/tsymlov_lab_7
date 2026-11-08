@@ -2,7 +2,7 @@
 ======================================================================
 
 Дата выполнения: 08.11.2026
-Python: 3.11.1, sqlite3 (stdlib), SQLAlchemy 2.1
+Python: 3.11.1, sqlite3, SQLAlchemy 2.1, aiosqlite 0.22
 ОС: Windows 10
 
 Все программы работают на in-memory базах SQLite, поэтому
@@ -24,19 +24,16 @@ UPDATE несуществующего id=999: 0 строк изменено
 код возврата: 0
 
 ----------------------------------------------------------------------
-Задание 8 (средняя). INNER JOIN и LEFT JOIN + GROUP BY
+Задание 6 (средняя). Параметры запроса и SQL-инъекция
 ----------------------------------------------------------------------
-$ py -3 task08_join.py
+$ py -3 task06_parameterized_queries.py
 
-INNER JOIN (студенты и их группы):
-   ('Иванов Иван Иванович', '220042-11', 'Информатика', 4)
-   ('Петрова Анна Сергеевна', '221341', 'Математика', 5)
-   ('Полошков Ярослав Витальевич', '220042-11', 'Информатика', 5)
-LEFT JOIN + GROUP BY (статистика по группам):
-   ('220042-11', 2, 4.5)
-   ('221341', 1, 5.0)
-   ('229999', 0, None)
-Группа 229999 без студентов попала в LEFT JOIN с total = 0 и avg_grade = NULL.
+Обычный ввод 'Ярослав':
+  unsafe: [(1, 'Ярослав', 'секрет-1')]
+  safe:   [(1, 'Ярослав', 'секрет-1')]
+Полезная нагрузка: ' OR '1'='1
+  unsafe: утечка 2 записей - ВСЯ таблица: [(1, 'Ярослав', 'секрет-1'), (2, 'Иван', 'секрет-2')]
+  safe:   0 записей - инъекция не сработала, строка искалась как обычное имя
 
 код возврата: 0
 
@@ -57,13 +54,62 @@ DELETE: осталось книг: 2
 код возврата: 0
 
 ----------------------------------------------------------------------
-Задание 4 (повышенная). Индексация и поиск (EXPLAIN QUERY PLAN)
+Задание 5 (повышенная). Транзакции: commit и rollback
+----------------------------------------------------------------------
+$ py -3 advanced05_transactions.py
+
+Начальные счета: [(1, 'Ярослав', 100), (2, 'Иван', 100)]
+Успешный перевод 30: commit, счета: [(1, 'Ярослав', 70), (2, 'Иван', 130)]
+Перевод 500 (больше баланса):
+  IntegrityError: CHECK constraint failed: balance >= 0
+  rollback: счета не изменились: [(1, 'Ярослав', 70), (2, 'Иван', 130)]
+Перевод на несуществующий счёт 999:
+  TransferError: один из счетов не существует
+  rollback: счета не изменились: [(1, 'Ярослав', 70), (2, 'Иван', 130)]
+
+код возврата: 0
+
+----------------------------------------------------------------------
+Задание 9 (повышенная). Асинхронный CRUD через aiosqlite
+----------------------------------------------------------------------
+$ py -3 advanced09_async_db.py
+
+async INSERT (gather): [1, 2, 3]
+async SELECT:
+  (1, 'Первая', 'async/await')
+  (2, 'Вторая', 'aiosqlite')
+  (3, 'Третья', 'asyncio.gather')
+async UPDATE: изменено строк 1
+async DELETE: удалено строк 1
+Осталось заметок: 2
+
+код возврата: 0
+
+----------------------------------------------------------------------
+Дополнительно. INNER JOIN и LEFT JOIN + GROUP BY
+----------------------------------------------------------------------
+$ py -3 task08_join.py
+
+INNER JOIN (студенты и их группы):
+   ('Иванов Иван Иванович', '220042-11', 'Информатика', 4)
+   ('Петрова Анна Сергеевна', '221341', 'Математика', 5)
+   ('Полошков Ярослав Витальевич', '220042-11', 'Информатика', 5)
+LEFT JOIN + GROUP BY (статистика по группам):
+   ('220042-11', 2, 4.5)
+   ('221341', 1, 5.0)
+   ('229999', 0, None)
+Группа 229999 без студентов попала в LEFT JOIN с total = 0 и avg_grade = NULL.
+
+код возврата: 0
+
+----------------------------------------------------------------------
+Дополнительно. Индексация и поиск (EXPLAIN QUERY PLAN)
 ----------------------------------------------------------------------
 $ py -3 advanced04_index_search.py
 
 Таблица students: 5000 записей
-Без индекса: план ['SCAN students'], 0.397 мс/запрос
-С индексом:  план ['SEARCH students USING COVERING INDEX idx_students_name (full_name>? AND full_name<?)'], 0.008 мс/запрос
+Без индекса: план ['SCAN students'], 0.399 мс/запрос
+С индексом:  план ['SEARCH students USING COVERING INDEX idx_students_name (full_name>? AND full_name<?)'], 0.009 мс/запрос
 Пример поиска 'Петров%' (первые 5):
    (2, 'Петров Студент0001', '220001', 3)
    (4, 'Петров Студент0003', '220003', 5)
@@ -74,7 +120,7 @@ $ py -3 advanced04_index_search.py
 код возврата: 0
 
 ----------------------------------------------------------------------
-Задание 10 (повышенная). Unit-тесты базы данных
+Дополнительно. Unit-тесты базы данных
 ----------------------------------------------------------------------
 $ py -3 -m unittest advanced10_db_tests -v
 
@@ -93,7 +139,7 @@ test_update_missing_returns_zero (advanced10_db_tests.TestUpdateRecord.test_upda
 test_update_validation (advanced10_db_tests.TestUpdateRecord.test_update_validation) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 0.041s
+Ran 13 tests in 0.050s
 
 OK
 
@@ -102,7 +148,7 @@ OK
 ----------------------------------------------------------------------
 Все модульные тесты репозитория
 ----------------------------------------------------------------------
-$ py -3 -m unittest test_tasks advanced10_db_tests -v
+$ py -3 -m unittest test_tasks advanced10_db_tests test_advanced_new -v
 
 test_measure_search_returns_positive (test_tasks.TestIndexSearch.test_measure_search_returns_positive) ... ok
 test_no_matches (test_tasks.TestIndexSearch.test_no_matches) ... ok
@@ -123,9 +169,16 @@ test_update_existing (advanced10_db_tests.TestUpdateRecord.test_update_existing)
 test_update_is_persistent (advanced10_db_tests.TestUpdateRecord.test_update_is_persistent) ... ok
 test_update_missing_returns_zero (advanced10_db_tests.TestUpdateRecord.test_update_missing_returns_zero) ... ok
 test_update_validation (advanced10_db_tests.TestUpdateRecord.test_update_validation) ... ok
+test_crud (test_advanced_new.TestAsyncDb.test_crud) ... ok
+test_safe_blocks_injection (test_advanced_new.TestSqlInjection.test_safe_blocks_injection) ... ok
+test_unsafe_leaks_table (test_advanced_new.TestSqlInjection.test_unsafe_leaks_table) ... ok
+test_invalid_amount (test_advanced_new.TestTransactions.test_invalid_amount) ... ok
+test_rollback_on_constraint_violation (test_advanced_new.TestTransactions.test_rollback_on_constraint_violation) ... ok
+test_rollback_on_missing_account (test_advanced_new.TestTransactions.test_rollback_on_missing_account) ... ok
+test_successful_commit (test_advanced_new.TestTransactions.test_successful_commit) ... ok
 
 ----------------------------------------------------------------------
-Ran 19 tests in 0.045s
+Ran 26 tests in 0.059s
 
 OK
 
